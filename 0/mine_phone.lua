@@ -1,13 +1,15 @@
 rednet.open("back")
 
+local TIMEOUT=1
+
 local args = ...
+
+local BOT_ID = 1
 
 local function check_type(v, t)
     if type(v)~=t then do return end
     else return v end
 end
-
-local BOT_ID = 1
 
 function _split_cmd(cmd)
     local a={}
@@ -33,7 +35,10 @@ repeat
     local cmd = ask(string.format("%d ~> ", BOT_ID))
     if _split_cmd(cmd)[1]=="id" then
         BOT_ID = check_type(tonumber(_split_cmd(cmd)[2]), "number")
-    else handleCommand(cmd) end
+    else
+        timer_id = os.startTimer(TIMEOUT)
+        parallel.waitForAny(function() handleCommand(cmd) end, function() repeat _, id = os.pullEvent("timer") until id==timer_id end)
+    end
 until cmd == "exit" or cmd == "exit server" or cmd == "exit client"
 
 rednet.close("back")
